@@ -19,7 +19,7 @@
     },
     {
       "src": "/media/(.*)",
-      "dest": "/media/$1"
+      "dest": "/media/$1" 
     },
     {
       "src": "/(.*)",

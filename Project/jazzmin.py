@@ -1,7 +1,7 @@
 JAZZMIN_SETTINGS = {
-    "site_title": " Admin",
-    "site_header": " Admin",
-    "site_brand": ".com",
+    "site_title": "Super Marine Admin",
+    "site_header": "Super Marine Admin",
+    "site_brand": "supermarine.com",
     
     
     "site_logo": "./logos/icon-2.png",  
