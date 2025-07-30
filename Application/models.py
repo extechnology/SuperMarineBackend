@@ -109,3 +109,20 @@ class Services(models.Model):
 
     def __str__(self):
         return self.title
+    
+class HomePageSliderImage(models.Model):
+    title = models.CharField(max_length=255)
+    subtitle = models.CharField(max_length=255)
+    image = models.ImageField(upload_to='slider_images/')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.title
+
+class AboutUsImages(models.Model):
+    title = models.CharField(max_length=255)
+    image = models.ImageField(upload_to='about_us_images/')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.title

@@ -77,6 +77,39 @@ class VerifyOTPSerializer(serializers.Serializer):
 
         return user
 
+class ResendOTPSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+
+    def validate(self, data):
+        email = data.get("email")
+
+        try:
+            otp_record = EmailOTP.objects.get(email=email)
+        except EmailOTP.DoesNotExist:
+            raise serializers.ValidationError({"email": "No OTP found. Please request a new one."})
+
+        # Check if OTP is still valid
+        expiration_time = otp_record.created_at + timedelta(minutes=5)
+        if now() <= expiration_time:
+            otp = otp_record.otp  # Use the existing OTP
+        else:
+            # Generate a new OTP
+            otp = str(random.randint(100000, 999999))
+            otp_record.otp = otp
+            otp_record.created_at = now()
+            otp_record.save()
+
+        # Send OTP via email
+        send_mail(
+            'Resend OTP Code',
+            f'Your OTP for verification is: {otp}',
+            'no-reply@yourdomain.com',
+            [email],
+            fail_silently=False,
+        )
+
+        return {"message": "OTP resent to email"}
+
 
 class PasswordResetSerializer(serializers.Serializer):
     email = serializers.EmailField()
@@ -108,10 +141,6 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
         return data
  
 
-
-
-
-
 class VehicleCategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = VehicleCategory
@@ -131,4 +160,24 @@ class BookingSerializer(serializers.ModelSerializer):
 class EnquiryBookingSerializer(serializers.ModelSerializer):
     class Meta:
         model = EnquiryBooking
+        fields = '__all__'
+        
+class ProjectGallerySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProjectGallery
+        fields = '__all__'
+        
+class ServicesSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Services
+        fields = '__all__'
+
+class HomePageSliderImageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = HomePageSliderImage
+        fields = '__all__'
+
+class AboutUsImagesSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AboutUsImages
         fields = '__all__'

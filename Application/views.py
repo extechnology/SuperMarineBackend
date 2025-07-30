@@ -123,3 +123,27 @@ class VehicleCategoryView(APIView):
         categories = VehicleCategory.objects.all()
         serializer = VehicleCategorySerializer(categories, many=True)
         return Response(serializer.data)
+
+class ProjectGalleryView(APIView):
+    def get(self, request):
+        gallery = ProjectGallery.objects.all()
+        serializer = ProjectGallerySerializer(gallery, many=True)
+        return Response(serializer.data)
+
+class ServicesView(APIView):
+    def get(self, request):
+        services = Services.objects.all()
+        serializer = ServicesSerializer(services, many=True)
+        return Response(serializer.data)
+
+class HomePageSliderImageView(APIView):
+    def get(self, request):
+        slider_images = HomePageSliderImage.objects.all()
+        serializer = HomePageSliderImageSerializer(slider_images, many=True)
+        return Response(serializer.data)
+
+class AboutUsImagesView(APIView):
+    def get(self, request):
+        about_us_images = AboutUsImages.objects.all()
+        serializer = AboutUsImagesSerializer(about_us_images, many=True)
+        return Response(serializer.data)

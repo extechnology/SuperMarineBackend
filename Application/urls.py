@@ -19,4 +19,10 @@ urlpatterns = [
     
     path('vehicle/', views.VehicleView.as_view(), name='vehicle'),
     path('vehicle-category/', views.VehicleCategoryView.as_view(), name='vehicle-category'),
+    
+    path('project-gallery/', views.ProjectGalleryView.as_view(), name='project-gallery'),
+    path('services/',views.ServicesView.as_view(), name='service'),
+    
+    path('home-page-slider/',views.HomePageSliderImageView.as_view(), name='slider-image'),
+    path('about-us-slider/',views.AboutUsImagesView.as_view(), name='about-us-slider'),
 ]
