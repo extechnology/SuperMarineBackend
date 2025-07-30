@@ -119,6 +119,13 @@ USE_I18N = True
 
 USE_TZ = True
 
+CORS_ALLOW_ORIGINS = [
+    "http://localhost:5173",
+    "https://super-marine-frontend.vercel.app/"
+]
+CORS_ALLOW_CREDENTIALS = True
+
+
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
@@ -159,6 +166,20 @@ SIMPLE_JWT = {
     'TOKEN_TYPE_CLAIM': 'token_type',
 }
 
+
+EMAIL_BACKEND = config('EMAIL_BACKEND')
+EMAIL_HOST = config('EMAIL_HOST')
+EMAIL_PORT = config('EMAIL_PORT')
+EMAIL_HOST_USER = config('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
+EMAIL_USE_TLS =       config('EMAIL_USE_TLS')
+DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL')
+
+ADMINS = [
+    
+    ("exedu", "exeduone@gmail.com"),
+    ("Vipin", "vipinrajk026@gmail.com"),
+]
 
 # Jazzmin settings
 

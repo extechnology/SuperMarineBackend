@@ -8,9 +8,6 @@ from django.utils.encoding import force_bytes
 from django.urls import reverse
 
 
-
-
-
 class RegisterSerializer(serializers.Serializer):
     email = serializers.EmailField()
     username = serializers.CharField()
@@ -140,6 +137,7 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
             raise serializers.ValidationError("Passwords do not match.")
         return data
  
+
 
 class VehicleCategorySerializer(serializers.ModelSerializer):
     class Meta:
