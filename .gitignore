@@ -1,1 +1,20 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+
+# SQLite database
 db.sqlite3
+
+# Environment variables
+.env
+
+# Django migrations cache
+*.pyc
+
+# VSCode or JetBrains project folders
+.vscode/
+.idea/
+
+# Mac / Linux / Windows system files
+.DS_Store
+Thumbs.db
