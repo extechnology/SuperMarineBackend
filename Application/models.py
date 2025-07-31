@@ -92,6 +92,7 @@ class EnquiryBooking(models.Model):
     def __str__(self):
         return f"{self.title} - {self.name} on {self.date}"
     
+    
 class ProjectGallery(models.Model):
     title = models.CharField(max_length=255)
     image = models.ImageField(upload_to='gallery_images/')
@@ -101,14 +102,17 @@ class ProjectGallery(models.Model):
     def __str__(self):
         return self.title
 
+
 class Services(models.Model):
     title = models.CharField(max_length=255)
     description = models.TextField(null=True, blank=True)
     image = models.ImageField(upload_to='services_images/')
+    points = models.TextField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return self.title
+    
     
 class HomePageSliderImage(models.Model):
     title = models.CharField(max_length=255)
