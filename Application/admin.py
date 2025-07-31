@@ -27,3 +27,11 @@ admin.site.register(Vehicle)
 admin.site.register(Booking)
 
 admin.site.register(EnquiryBooking)
+
+admin.site.register(ProjectGallery)
+
+admin.site.register(Services)
+
+admin.site.register(HomePageSliderImage)
+
+admin.site.register(AboutUsImages)

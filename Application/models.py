@@ -80,7 +80,7 @@ class Booking(models.Model):
 
 class EnquiryBooking(models.Model):
     title = models.CharField(max_length=255)
-    duration = models.DurationField()
+    duration = models.CharField(max_length=255)
     time = models.TimeField()
     date = models.DateField()
     name = models.CharField(max_length=255)
