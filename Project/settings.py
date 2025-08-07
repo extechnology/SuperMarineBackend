@@ -181,7 +181,7 @@ DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL')
 
 ADMINS = [
     
-    ("exedu", "exeduone@gmail.com"),
+    ("super marine", "supermarine.jetski@gmail.com"),
     ("Vipin", "vipinrajk026@gmail.com"),
 ]
 
