@@ -2,6 +2,29 @@ from rest_framework import serializers
 from Application.models import *
 
 
+
+from .custom_permissions import *
+from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from rest_framework import serializers
+from django.contrib.auth.models import User
+
+class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    def validate(self, attrs):
+        data = super().validate(attrs)
+
+        user = self.user
+        if not user.is_staff and not user.is_superuser:
+            raise serializers.ValidationError("You are not authorized to access the dashboard.")
+
+        # Optionally add custom user info
+        data['username'] = user.username
+        data['email'] = user.email
+        data['is_staff'] = user.is_staff
+        data['is_superuser'] = user.is_superuser
+
+        return data
+
 class VehicleCategorySerializerDashboard(serializers.ModelSerializer):
     class Meta:
         model = VehicleCategory

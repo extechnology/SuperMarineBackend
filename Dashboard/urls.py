@@ -14,4 +14,5 @@ router.register(r'aboutus-images', AboutUsImagesViewSetDashboard)
 
 urlpatterns = [
     path('', include(router.urls)),
+    path('api/token/', DashboardTokenObtainPairView.as_view(), name='token_obtain_pair'),
 ]

@@ -6,9 +6,13 @@ from rest_framework import viewsets
 from .serializers import *
 from Application.models import *
 
-from .custom_permissions import *
 
-# Create your views here.
+class DashboardTokenObtainPairView(TokenObtainPairView):
+    serializer_class = CustomTokenObtainPairSerializer
+
+class DashboardTokenObtainPairView(TokenObtainPairView):
+    serializer_class = CustomTokenObtainPairSerializer
+
 
 class VehicleCategoryViewSetDashboard(viewsets.ModelViewSet):
     queryset = VehicleCategory.objects.all()
