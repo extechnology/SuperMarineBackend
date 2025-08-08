@@ -209,7 +209,6 @@ CORS_ALLOW_METHODS = [
     "PUT",
 ]
 
-
 # Custom User
 
 AUTH_USER_MODEL = 'Application.User'
