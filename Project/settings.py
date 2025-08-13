@@ -179,6 +179,14 @@ EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
 EMAIL_USE_TLS =       config('EMAIL_USE_TLS')
 DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL')
 
+
+import stripe
+STRIPE_PUBLISHABLE_KEY = config('STRIPE_PUBLISHABLE_KEY')
+STRIPE_SECRET_KEY = config('STRIPE_SECRET_KEY')
+STRIPE_WEBHOOK_SECRET = config('STRIPE_WEBHOOK_SECRET')
+FRONTEND_URL = config('FRONTEND_URL')
+stripe.api_key = STRIPE_SECRET_KEY
+
 ADMINS = [
     
     ("super marine", "supermarine.jetski@gmail.com"),

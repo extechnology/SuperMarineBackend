@@ -55,6 +55,7 @@ class Vehicle(models.Model):
     discount = models.PositiveIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    featured = models.BooleanField(default=False)
     
     def __str__(self):
         return str(self.name - self.category.name)
@@ -79,7 +80,17 @@ class Booking(models.Model):
     
 
 class EnquiryBooking(models.Model):
-    title = models.CharField(max_length=255)
+    OPTIONS = [
+        ('jet_ski', 'Jet Ski'),
+        ('standing_jet_ski', 'Standing Jet Ski'),
+        ('speed_boat', 'Speed Boat'),
+        ('quad_bikes', 'Quad Bikes'),
+        ('buggy', 'Buggy'),
+        ('marine_cars', 'Marine Cars'),
+        ('yacht', 'Yacht'),
+    ]
+
+    title = models.CharField(max_length=255 , choices=OPTIONS)
     duration = models.CharField(max_length=255)
     time = models.TimeField()
     date = models.DateField()
@@ -91,6 +102,32 @@ class EnquiryBooking(models.Model):
 
     def __str__(self):
         return f"{self.title} - {self.name} on {self.date}"
+
+    
+class ThrillMeetsTrust(models.Model):
+    image = models.ImageField(upload_to='about_us_images/')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.id
+    
+class Numbers(models.Model):
+    experience = models.CharField(max_length=255)
+    happy_customers = models.CharField(max_length=255)
+    total_rides = models.CharField(max_length=255)
+    created_at = models.DateTimeField(auto_now_add=True)
+    image = models.ImageField(upload_to='about_us_images/')
+
+    def __str__(self):
+        return self.title
+
+    
+class AdventureGallery(models.Model):
+    image=models.ImageField(upload_to='adventure_images/')
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return str(self.id)
     
     
 class ProjectGallery(models.Model):
@@ -133,3 +170,34 @@ class AboutUsImages(models.Model):
 
     def __str__(self):
         return self.title
+
+
+class AboutUsContent(models.Model):
+    title = models.CharField(max_length=255)
+    description = models.TextField(null=True, blank=True)
+    image = models.ImageField(upload_to='about_us_images/')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.title
+    
+    
+class BookAdventure(models.Model):
+    subtitle = models.CharField(max_length=255)
+    image = models.ImageField(upload_to='about_us_images/')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.title
+    
+class Payment(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    stripe_payment_intent_id = models.CharField(max_length=200)
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    currency = models.CharField(max_length=3, default='usd')
+    status = models.CharField(max_length=50)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Payment {self.stripe_payment_intent_id} - {self.amount}"

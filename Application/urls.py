@@ -1,8 +1,14 @@
-from django.urls import path
+from django.urls import path,include
 from . import views
 from rest_framework_simplejwt.views import (
     TokenObtainPairView
 )
+from rest_framework.routers import DefaultRouter
+
+
+router = DefaultRouter()
+
+router.register(r'bookings', views.BookingViewSet)
 
 urlpatterns = [
     
@@ -10,6 +16,7 @@ urlpatterns = [
     path('register/', views.RegisterView.as_view(), name='register'),
     path('verify-otp/', views.VerifyOTPView.as_view(), name='verify-otp'),
     path('resend-otp/', views.ResendOTPView.as_view(), name='resend-otp'),
+    path('api/', include(router.urls)),
     path('google-auth/', views.GoogleAuthView.as_view(), name='google-auth'),
     path('password-reset-request/', views.PasswordResetRequestView.as_view(), name='password-reset-request'),
     path('password-reset-confirm/<uuid64>/<token>/', views.PasswordResetConfirmView.as_view(), name='password-reset-confirm'),
@@ -28,4 +35,8 @@ urlpatterns = [
     path('home-page-slider/',views.HomePageSliderImageView.as_view(), name='slider-image'),
     
     path('about-us-slider/',views.AboutUsImagesView.as_view(), name='about-us-slider'),
+    
+    path("api/payments/create-checkout-session/", views.create_checkout_session, name="create-checkout-session"),
+    path("api/payments/webhook/", views.stripe_webhook, name="stripe-webhook"),
+    path("api/payments/session/<str:session_id>/", views.get_session, name="stripe-session"),
 ]

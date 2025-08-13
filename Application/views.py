@@ -18,6 +18,17 @@ from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_decode
 from rest_framework import generics
 
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_http_methods
+import stripe
+from django.http import JsonResponse
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from decimal import Decimal
+from django.utils.dateparse import parse_date,parse_time
+from rest_framework import permissions
+import os
+
 # authentication
 
 
@@ -147,3 +158,155 @@ class AboutUsImagesView(APIView):
         about_us_images = AboutUsImages.objects.all()
         serializer = AboutUsImagesSerializer(about_us_images, many=True)
         return Response(serializer.data)
+    
+    
+class BookingViewSet(viewsets.ModelViewSet):
+    queryset = Booking.objects.all().order_by("-created_at")
+    serializer_class = BookingSerializer
+    
+    
+stripe.api_key = settings.STRIPE_SECRET_KEY
+
+DURATION_MAP = {
+    "30 mins": "00:30:00",
+    "1 hour": "01:00:00",
+    "2 hours": "02:00:00",
+    "Full day": "08:00:00",
+}
+
+def parse_duration_to_td(s: str) -> timedelta:
+    hh, mm, ss = [int(x) for x in s.split(":")]
+    return timedelta(hours=hh, minutes=mm, seconds=ss)
+
+def ensure_hhmmss(t: str) -> str:
+    # "14:30" -> "14:30:00"
+    return t if len(t) == 8 else f"{t}:00"
+
+def calculate_total(price_per_hour: Decimal, duration_label: str, people: int, discount_pct: Decimal) -> Decimal:
+    multipliers = {
+        "30 mins": Decimal("0.6"),
+        "1 hour": Decimal("1"),
+        "2 hours": Decimal("1.8"),
+        "Full day": Decimal("3.5"),
+    }
+    base = price_per_hour * multipliers.get(duration_label, Decimal("1"))
+    subtotal = base * Decimal(people)
+    discount = subtotal * (discount_pct / Decimal("100")) if discount_pct else Decimal("0")
+    return (subtotal - discount).quantize(Decimal("0.01"))
+
+@api_view(["POST"])
+@permission_classes([permissions.AllowAny])  
+def create_checkout_session(request):
+    data = request.data
+    print(request.data,"data------------------------------------")
+
+
+    price_per_hour = Decimal(str(data.get("price_per_hour", "120.00")))
+    duration_label = data.get("duration") or "1 hour"
+    people = int(data.get("number_of_persons", 1))
+    discount_pct = Decimal(str(data.get("discount", "0")))
+    email = data.get("email")
+    title = data.get("title", "Service")
+    date_str = data.get("date")
+    time_str = ensure_hhmmss(data.get("time", "10:00"))
+
+    total = calculate_total(price_per_hour, duration_label, people, discount_pct)
+    amount_cents = int(total * 100)
+
+    description = f"{title} — {duration_label}, {people} person(s) — {date_str} {time_str}"
+
+    try:
+      session = stripe.checkout.Session.create(
+          mode="payment",
+          payment_method_types=["card"],
+          customer_email=email,  # optional
+          line_items=[{
+              "price_data": {
+                  "currency": "usd",  # change if needed
+                  "product_data": {"name": title, "description": description},
+                  "unit_amount": amount_cents,
+              },
+              "quantity": 1,
+          }],
+          success_url=f"{settings.FRONTEND_URL}/payment/success?session_id={{CHECKOUT_SESSION_ID}}",
+          cancel_url=f"{settings.FRONTEND_URL}/payment/cancel",
+          metadata={
+              # store everything you need to create the Booking after payment
+              "title": title,
+              "date": date_str or "",
+              "time": time_str,
+              "duration_label": duration_label,
+              "number_of_persons": str(people),
+              "email": email or "",
+              "discount": str(discount_pct),
+              "price_per_hour": str(price_per_hour),
+          },
+      )
+      return Response({"checkout_url": session.url, "id": session.id}, status=status.HTTP_201_CREATED)
+    except Exception as e:
+        import traceback
+        traceback.print_exc()  # Logs the full stack trace
+        print("Stripe error:", e)  # This now works because e is in scope
+        return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+@csrf_exempt
+def stripe_webhook(request):
+    payload = request.body
+    sig_header = request.META.get("HTTP_STRIPE_SIGNATURE")
+    endpoint_secret = settings.STRIPE_WEBHOOK_SECRET
+
+    try:
+        event = stripe.Webhook.construct_event(payload, sig_header, endpoint_secret)
+    except Exception:
+        return HttpResponse(status=400)
+
+    if event["type"] == "checkout.session.completed":
+        session = event["data"]["object"]
+        meta = session.get("metadata", {})
+
+        # Build/save the Booking here (payment succeeded)
+        title = meta.get("title", "Service")
+        date = parse_date(meta.get("date") or "")
+        time = parse_time(meta.get("time") or "10:00:00")
+        duration_label = meta.get("duration_label", "1 hour")
+        num_people = int(meta.get("number_of_persons", "1"))
+        email = meta.get("email", "")
+        discount_pct = Decimal(meta.get("discount", "0"))
+        price_per_hour = Decimal(meta.get("price_per_hour", "0"))
+
+        # Pick a duration for the model's DurationField
+        dur = DURATION_MAP.get(duration_label, "01:00:00")
+        duration_td = parse_duration_to_td(dur)
+
+        amount_total = Decimal(session.get("amount_total", 0)) / Decimal("100")
+
+        # Name/phone not known at webhook time? Store blank or capture on Checkout through custom fields.
+        Booking.objects.create(
+            title=title,
+            price=amount_total,
+            duration=duration_td,
+            time=time,
+            date=date,
+            name="",              # or store from metadata if you passed it
+            email=email,
+            phone="",             # optional
+            special_request=None, # optional
+            discount=discount_pct,
+            number_of_persons=num_people,
+        )
+
+    return HttpResponse(status=200)
+
+@api_view(["GET"])
+@permission_classes([permissions.AllowAny])
+def get_session(request, session_id: str):
+    session = stripe.checkout.Session.retrieve(session_id)
+    return Response({
+        "status": session.get("status"),
+        "payment_status": session.get("payment_status"),
+        "amount_total": (Decimal(session.get("amount_total", 0)) / Decimal("100")),
+        "currency": session.get("currency"),
+        "metadata": session.get("metadata", {}),
+    })
