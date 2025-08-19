@@ -30,8 +30,14 @@ class VehicleCategorySerializerDashboard(serializers.ModelSerializer):
         model = VehicleCategory
         fields = '__all__'
         
+class VehicleDurationSerializerDashboard(serializers.ModelSerializer):
+    class Meta:
+        model = VehicleDuration
+        fields = '__all__'
+        
 class VehicleSerializerDashboard(serializers.ModelSerializer):
     category = VehicleCategorySerializerDashboard()
+    duration = VehicleDurationSerializerDashboard(many=True)
     class Meta:
         model = Vehicle
         fields = '__all__'
