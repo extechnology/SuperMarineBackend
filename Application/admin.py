@@ -24,12 +24,13 @@ admin.site.register(VehicleCategory, VehicleCategoryAdmin)
 
 admin.site.register(Vehicle)
 
+admin.site.register(VehicleDuration)
+
 admin.site.register(Booking)
 
 admin.site.register(EnquiryBooking)
 
 admin.site.register(ProjectGallery)
-
 
 admin.site.register(HomePageSliderImage)
 

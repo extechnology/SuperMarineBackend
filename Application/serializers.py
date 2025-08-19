@@ -167,16 +167,18 @@ class ProjectGallerySerializer(serializers.ModelSerializer):
         fields = '__all__'
         
 class ServicesSerializer(serializers.ModelSerializer):
-    click_count = serializers.IntegerField(source="clicks.count", read_only=True)
-    last_clicked = serializers.SerializerMethodField()
 
     class Meta:
         model = Services
-        fields = ["id", "title", "description", "image", "points", "created_at", "click_count", "last_clicked"]
+        fields = '__all__'
 
-    def get_last_clicked(self, obj):
-        last_click = obj.clicks.order_by("-created_at").first()
-        return last_click.created_at if last_click else None
+
+
+class ServiceEnquirySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ServiceEnquiry
+        fields = '__all__'
+        
 
 class HomePageSliderImageSerializer(serializers.ModelSerializer):
     class Meta:

@@ -32,6 +32,8 @@ urlpatterns = [
     
     path('services/',views.ServicesView.as_view(), name='service'),
     
+    path('service/enquiry/', views.ServiceEnquiryView.as_view(), name='service-enquiry'),
+    
     path('home-page-slider/',views.HomePageSliderImageView.as_view(), name='slider-image'),
     
     path('about-us-slider/',views.AboutUsImagesView.as_view(), name='about-us-slider'),

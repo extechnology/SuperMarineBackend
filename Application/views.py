@@ -27,6 +27,9 @@ from rest_framework.permissions import IsAuthenticated
 from decimal import Decimal
 from django.utils.dateparse import parse_date,parse_time
 from rest_framework import permissions
+from google.oauth2 import id_token
+from google.auth.transport import requests
+from rest_framework_simplejwt.tokens import RefreshToken
 import os
 
 # authentication
@@ -34,28 +37,46 @@ import os
 
 class GoogleAuthView(APIView):
     def post(self, request):
-        username = request.data.get('username')
-        email = request.data.get('email')
+        token = request.data.get("token")  # frontend sends Google ID token
 
-        if not username or not email:
-            return Response({'error': 'Username and email are required'}, status=status.HTTP_400_BAD_REQUEST)
+        if not token:
+            return Response({"error": "ID token is required"}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Get or create the user based on the provided email
-        user, created = User.objects.get_or_create(email=email, defaults={'username': username})
+        try:
+            # Verify the token with Google
+            idinfo = id_token.verify_oauth2_token(
+                token,
+                requests.Request(),
+                os.getenv("GOOGLE_CLIENT_ID")  # must match your Google Cloud Console client ID
+            )
 
-        # If the user was just created, you can assign the username or handle further logic here
-        if created:
-            user.username = username
-            user.save()
+            email = idinfo.get("email")
+            username = idinfo.get("name") or email.split("@")[0]
 
-        # Generate JWT tokens
-        refresh = RefreshToken.for_user(user)
-        
+            if not email:
+                return Response({"error": "Invalid token: no email"}, status=status.HTTP_400_BAD_REQUEST)
 
-        return Response({
-            'refresh': str(refresh),
-            'access': str(refresh.access_token),
-        }, status=status.HTTP_200_OK)
+            # Get or create user
+            user, created = User.objects.get_or_create(email=email, defaults={"username": username})
+
+            # Update username if newly created
+            if created:
+                user.username = username
+                user.save()
+
+            # Generate JWT tokens
+            refresh = RefreshToken.for_user(user)
+
+            return Response(
+                {
+                    "refresh": str(refresh),
+                    "access": str(refresh.access_token),
+                },
+                status=status.HTTP_200_OK,
+            )
+
+        except ValueError as e:
+            return Response({"error": f"Invalid token: {str(e)}"}, status=status.HTTP_400_BAD_REQUEST)
         
         
 class RegisterView(APIView):
@@ -65,6 +86,8 @@ class RegisterView(APIView):
             serializer.save()
             return Response({'message': 'OTP sent to email'}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
 
 class VerifyOTPView(APIView):
     def post(self, request):
@@ -148,29 +171,20 @@ class ServicesView(APIView):
         serializer = ServicesSerializer(services, many=True)
         return Response(serializer.data)
 
-    def post(self, request, *args, **kwargs):
-        """
-        Log a click for a service.
-        Expected body: { "service_id": 1 }
-        """
-        service_id = request.data.get("service_id")
-        try:
-            service = Services.objects.get(id=service_id)
-            ServiceClick.objects.create(service=service)
 
+class ServiceEnquiryView(APIView):
+    def post(self, request):
+        serializer = ServiceEnquirySerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
             return Response(
-                {
-                    "message": f"Click logged for {service.title}",
-                    "service": service.title,
-                    "total_clicks": service.clicks.count(),
-                    "last_clicked": service.clicks.last().created_at
-                },
-                status=status.HTTP_200_OK
+                {"message": "Enquiry submitted successfully", "data": serializer.data},
+                status=status.HTTP_201_CREATED
             )
-        except Services.DoesNotExist:
-            return Response({"error": "Service not found"}, status=status.HTTP_404_NOT_FOUND)
-        
-
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    
+    
 class HomePageSliderImageView(APIView):
     def get(self, request):
         slider_images = HomePageSliderImage.objects.all()
