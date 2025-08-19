@@ -158,8 +158,9 @@ class Services(models.Model):
         return self.title
 
 
-class ServiceClick(models.Model):
-    service = models.ForeignKey(Services, on_delete=models.CASCADE, related_name="clicks")
+class ServiceEnquiry(models.Model):
+    name = models.CharField(max_length=255)
+    message = models.TextField(default="")
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

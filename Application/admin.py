@@ -46,8 +46,3 @@ class ServicesAdmin(admin.ModelAdmin):
         last = obj.clicks.order_by("-created_at").first()
         return last.created_at if last else "-"
 
-
-@admin.register(ServiceClick)
-class ServiceClickAdmin(admin.ModelAdmin):
-    list_display = ("service", "created_at")
-    list_filter = ("service", "created_at")
