@@ -156,6 +156,15 @@ class Services(models.Model):
 
     def __str__(self):
         return self.title
+
+
+class ServiceClick(models.Model):
+    service = models.ForeignKey(Services, on_delete=models.CASCADE, related_name="clicks")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Click on {self.service.title} at {self.created_at}"
+    
     
     
 class HomePageSliderImage(models.Model):

@@ -141,11 +141,35 @@ class ProjectGalleryView(APIView):
         serializer = ProjectGallerySerializer(gallery, many=True)
         return Response(serializer.data)
 
+
 class ServicesView(APIView):
     def get(self, request):
         services = Services.objects.all()
         serializer = ServicesSerializer(services, many=True)
         return Response(serializer.data)
+
+    def post(self, request, *args, **kwargs):
+        """
+        Log a click for a service.
+        Expected body: { "service_id": 1 }
+        """
+        service_id = request.data.get("service_id")
+        try:
+            service = Services.objects.get(id=service_id)
+            ServiceClick.objects.create(service=service)
+
+            return Response(
+                {
+                    "message": f"Click logged for {service.title}",
+                    "service": service.title,
+                    "total_clicks": service.clicks.count(),
+                    "last_clicked": service.clicks.last().created_at
+                },
+                status=status.HTTP_200_OK
+            )
+        except Services.DoesNotExist:
+            return Response({"error": "Service not found"}, status=status.HTTP_404_NOT_FOUND)
+        
 
 class HomePageSliderImageView(APIView):
     def get(self, request):
