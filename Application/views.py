@@ -198,6 +198,28 @@ class AboutUsImagesView(APIView):
         return Response(serializer.data)
     
     
+class BookAdventureViewSet(viewsets.ModelViewSet):
+    queryset = BookAdventure.objects.all()
+    serializer_class = BookAdventureSerializer
+    
+    
+class AboutUsContentViewSet(viewsets.ModelViewSet):
+    queryset = AboutUsContent.objects.all()
+    serializer_class = AboutUsContentSerializer
+    
+class ThrillMeetViewSet(viewsets.ModelViewSet):
+    queryset = ThrillMeetsTrust.objects.all()
+    serializer_class = ThrillMeetSerializer
+    
+class NumbersViewSet(viewsets.ModelViewSet):
+    queryset = Numbers.objects.all()
+    serializer_class = NumbersSerializer
+    
+class AdventureGalleryViewSet(viewsets.ModelViewSet):
+    queryset = AdventureGallery.objects.all()
+    serializer_class = AdventureGallerySerializer
+
+    
 class BookingViewSet(viewsets.ModelViewSet):
     queryset = Booking.objects.all().order_by("-created_at")
     serializer_class = BookingSerializer
@@ -348,3 +370,4 @@ def get_session(request, session_id: str):
         "currency": session.get("currency"),
         "metadata": session.get("metadata", {}),
     })
+    

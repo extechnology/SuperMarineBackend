@@ -9,6 +9,11 @@ from rest_framework.routers import DefaultRouter
 router = DefaultRouter()
 
 router.register(r'bookings', views.BookingViewSet)
+router.register(r'adventure/gallery', views.AdventureGalleryViewSet)
+router.register(r'numbers', views.NumbersViewSet)
+router.register(r'thrill/meet', views.ThrillMeetViewSet)
+router.register(r'book/adventure', views.BookAdventureViewSet)
+router.register(r'about/content', views.AboutUsContentViewSet)
 
 urlpatterns = [
     

@@ -173,7 +173,6 @@ class ServicesSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-
 class ServiceEnquirySerializer(serializers.ModelSerializer):
     class Meta:
         model = ServiceEnquiry
@@ -189,3 +188,32 @@ class AboutUsImagesSerializer(serializers.ModelSerializer):
     class Meta:
         model = AboutUsImages
         fields = '__all__'
+        
+class ThrillMeetSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ThrillMeetsTrust
+        fields = '__all__'
+        
+        
+class NumbersSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Numbers
+        fields = '__all__'
+        
+class AdventureGallerySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AdventureGallery
+        fields = '__all__'
+        
+        
+class BookAdventureSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = BookAdventure
+        fields = '__all__'
+        
+
+class AboutUsContentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AboutUsContent
+        fields = '__all__'
+        
