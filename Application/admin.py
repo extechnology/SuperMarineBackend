@@ -54,3 +54,11 @@ admin.site.register(Numbers)
 admin.site.register(AdventureGallery)
 
 admin.site.register(BookAdventure)
+
+admin.site.register(ContactBanner)
+
+admin.site.register(RentalBanner)
+
+admin.site.register(ServiceBanner)
+
+admin.site.register(GalleryBanner)

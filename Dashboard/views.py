@@ -53,3 +53,9 @@ class AboutUsImagesViewSetDashboard(viewsets.ModelViewSet):
     queryset = AboutUsImages.objects.all()
     serializer_class = AboutUsImagesSerializerDashboard
     permission_classes = [IsSuperuserOrStaff]
+    
+    
+class ServiceEnquiryViewSetDashboard(viewsets.ModelViewSet):
+    queryset = ServiceEnquiry.objects.all()
+    serializer_class = ServiceEnquirySerializerDashboard
+    permission_classes = [IsSuperuserOrStaff]

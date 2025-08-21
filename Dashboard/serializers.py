@@ -71,3 +71,9 @@ class AboutUsImagesSerializerDashboard(serializers.ModelSerializer):
     class Meta:
         model = AboutUsImages
         fields = '__all__'
+        
+        
+class ServiceEnquirySerializerDashboard(serializers.ModelSerializer):
+    class Meta:
+        model = ServiceEnquiry
+        fields = '__all__'

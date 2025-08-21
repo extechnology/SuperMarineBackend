@@ -11,6 +11,7 @@ router.register(r'project-gallery', ProjectGalleryViewSetDashboard)
 router.register(r'services', ServicesViewSetDashboard)
 router.register(r'homepage-slider-images', HomePageSliderImageViewSetDashboard)
 router.register(r'aboutus-images', AboutUsImagesViewSetDashboard)
+router.register(r'service/enquiry', ServiceEnquiryViewSetDashboard)
 
 urlpatterns = [
     path('', include(router.urls)),

@@ -240,3 +240,5 @@ class RentalBannerSerializer(serializers.ModelSerializer):
     class Meta:
         model = RentalBanner
         fields = '__all__'
+        
+        
