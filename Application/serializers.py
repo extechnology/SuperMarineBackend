@@ -217,3 +217,26 @@ class AboutUsContentSerializer(serializers.ModelSerializer):
         model = AboutUsContent
         fields = '__all__'
         
+        
+        
+class GalleryBannerSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = GalleryBanner
+        fields = '__all__'
+        
+class ContactBannerSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ContactBanner
+        fields = '__all__'
+        
+        
+class ServiceBannerSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ServiceBanner
+        fields = '__all__'
+        
+        
+class RentalBannerSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = RentalBanner
+        fields = '__all__'

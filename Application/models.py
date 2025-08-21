@@ -140,6 +140,38 @@ class AdventureGallery(models.Model):
         return str(self.id)
     
     
+class GalleryBanner (models.Model):
+    image = models.ImageField(upload_to='gallery_images/')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"GalleryBanner {self.id}"
+
+    
+class ContactBanner(models.Model):
+    image = models.ImageField(upload_to='contact_images/')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"ContactBanner {self.id}"
+
+    
+class ServiceBanner(models.Model):
+    image = models.ImageField(upload_to='services_images/')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"ServiceBanner {self.id}"
+
+    
+class RentalBanner(models.Model):
+    image = models.ImageField(upload_to='rental_images/')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"RentalBanner {self.id}"
+
+    
 class ProjectGallery(models.Model):
     title = models.CharField(max_length=255)
     image = models.ImageField(upload_to='gallery_images/')

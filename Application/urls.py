@@ -14,6 +14,10 @@ router.register(r'numbers', views.NumbersViewSet)
 router.register(r'thrill/meet', views.ThrillMeetViewSet)
 router.register(r'book/adventure', views.BookAdventureViewSet)
 router.register(r'about/content', views.AboutUsContentViewSet)
+router.register(r'gallery/banner', views.GalleryBannerViewSet)
+router.register(r'contact/banner', views.ContactBannerViewSet)
+router.register(r'rental/banner', views.RentalBannerViewSet)
+router.register(r'service/banner', views.ServiceBannerViewSet)
 
 urlpatterns = [
     

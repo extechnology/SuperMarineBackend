@@ -225,6 +225,23 @@ class BookingViewSet(viewsets.ModelViewSet):
     serializer_class = BookingSerializer
     
     
+class GalleryBannerViewSet(viewsets.ModelViewSet):
+    queryset = GalleryBanner.objects.all()
+    serializer_class = GalleryBannerSerializer
+    
+class ContactBannerViewSet(viewsets.ModelViewSet):
+    queryset = ContactBanner.objects.all()
+    serializer_class = ContactBannerSerializer
+    
+class RentalBannerViewSet(viewsets.ModelViewSet):   
+    queryset = RentalBanner.objects.all()
+    serializer_class = RentalBannerSerializer
+    
+class ServiceBannerViewSet(viewsets.ModelViewSet):
+    queryset = ServiceBanner.objects.all()
+    serializer_class = ServiceBannerSerializer 
+    
+
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
 DURATION_MAP = {
