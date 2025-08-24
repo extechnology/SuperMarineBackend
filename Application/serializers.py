@@ -449,7 +449,9 @@ class ResendOTPSerializer(serializers.Serializer):
         )
         return data 
             
-
+from django.core.mail import EmailMultiAlternatives
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.encoding import force_bytes, force_str
 
 
 class PasswordResetSerializer(serializers.Serializer):
@@ -461,26 +463,55 @@ class PasswordResetSerializer(serializers.Serializer):
         return value
 
     def save(self):
+        request = self.context.get("request")
         email = self.validated_data['email']
         user = User.objects.get(email=email)
+
         uid = urlsafe_base64_encode(force_bytes(user.pk))
         token = default_token_generator.make_token(user)
-        reset_link = f"{self.context['request'].scheme}://{self.context['request'].get_host()}/api/employee/reset-password-confirm/{uid}/{token}/"
-        
+
+        frontend_url = f"http://localhost:5173/reset-password/{uid}/{token}"
+
         subject = "Password Reset Requested"
-        message = f"Hi your Username is : {user.username},\n\nClick the link below to reset your password:\n{reset_link}\n\nThis link will expire in 24 hours.\n\nIf you didn’t request this, ignore this email."
-        send_mail(subject, message, settings.EMAIL_HOST_USER, [email])
-        
-        
+        text_message = f"Hi {user.username},\n\nClick the link below:\n{frontend_url}"
+        html_message = f"""
+        <p>Hi <b>{user.username}</b>,</p>
+        <p>Click the link below to reset your password:</p>
+        <p><a href="{frontend_url}">{frontend_url}</a></p>
+        <p>This link will expire in 24 hours.</p>
+        """
+
+        email_msg = EmailMultiAlternatives(subject, text_message, settings.EMAIL_HOST_USER, [email])
+        email_msg.attach_alternative(html_message, "text/html")
+        email_msg.send()
+
+
 class PasswordResetConfirmSerializer(serializers.Serializer):
     password = serializers.CharField(write_only=True, min_length=6)
     confirm_password = serializers.CharField(write_only=True)
+    uidb64 = serializers.CharField(write_only=True)
+    token = serializers.CharField(write_only=True)
 
     def validate(self, data):
         if data['password'] != data['confirm_password']:
             raise serializers.ValidationError("Passwords do not match.")
+
+        try:
+            uid = force_str(urlsafe_base64_decode(data['uidb64']))
+            self.user = User.objects.get(pk=uid)
+        except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+            raise serializers.ValidationError("Invalid reset link.")
+
+        if not default_token_generator.check_token(self.user, data['token']):
+            raise serializers.ValidationError("Invalid or expired token.")
+
         return data
- 
+
+    def save(self):
+        password = self.validated_data['password']
+        self.user.set_password(password)
+        self.user.save()
+        return self.user
 
 
 class VehicleCategorySerializer(serializers.ModelSerializer):

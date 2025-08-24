@@ -27,8 +27,9 @@ urlpatterns = [
     path('resend-otp/', views.ResendOTPView.as_view(), name='resend-otp'),
     path('api/', include(router.urls)),
     path('google-auth/', views.GoogleAuthView.as_view(), name='google-auth'),
-    path('password-reset-request/', views.PasswordResetRequestView.as_view(), name='password-reset-request'),
-    path('password-reset-confirm/<uuid64>/<token>/', views.PasswordResetConfirmView.as_view(), name='password-reset-confirm'),
+    path("password-reset/", views.PasswordResetView.as_view(), name="password-reset"),
+    path("password-reset-confirm/", views.PasswordResetConfirmView.as_view(), name="password-reset-confirm"),
+
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     
     path('enquiry-booking/', views.EnquiryBookingView.as_view(), name='booking'),
