@@ -470,16 +470,56 @@ class PasswordResetSerializer(serializers.Serializer):
         uid = urlsafe_base64_encode(force_bytes(user.pk))
         token = default_token_generator.make_token(user)
 
-        frontend_url = f"http://localhost:5173/reset-password/{uid}/{token}"
-
+        frontend_url = f"https://supermarinerental.com/reset-password/{uid}/{token}"
         subject = "Password Reset Requested"
         text_message = f"Hi {user.username},\n\nClick the link below:\n{frontend_url}"
+
         html_message = f"""
-        <p>Hi <b>{user.username}</b>,</p>
-        <p>Click the link below to reset your password:</p>
-        <p><a href="{frontend_url}">{frontend_url}</a></p>
-        <p>This link will expire in 24 hours.</p>
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <meta charset="UTF-8" />
+            <title>Password Reset</title>
+          </head>
+          <body style="font-family: Arial, sans-serif; background-color: #f4f4f7; margin: 0; padding: 0;">
+            <table width="100%" bgcolor="#f4f4f7" cellpadding="0" cellspacing="0">
+              <tr>
+                <td align="center" style="padding: 40px 0;">
+                  <table width="600" bgcolor="#ffffff" cellpadding="0" cellspacing="0" style="border-radius: 8px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+                    <!-- Header -->
+                    <tr>
+                      <td align="center" bgcolor="#0d47a1" style="padding: 20px; color: #ffffff; font-size: 22px; font-weight: bold;">
+                        Super Marine Rental
+                      </td>
+                    </tr>
+                    <!-- Body -->
+                    <tr>
+                      <td style="padding: 30px; color: #333333; font-size: 16px; line-height: 1.6;">
+                        <p>Hi <b>{user.username}</b>,</p>
+                        <p>We received a request to reset your password. Click the button below to set a new one:</p>
+                        <p style="text-align: center; margin: 30px 0;">
+                          <a href="{frontend_url}" style="background-color: #0d47a1; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-size: 16px; font-weight: bold; display: inline-block;">
+                            Reset Password
+                          </a>
+                        </p>
+                        <p>If you did not request a password reset, you can safely ignore this email.</p>
+                        <p style="font-size: 14px; color: #666;">This link will expire in 24 hours.</p>
+                      </td>
+                    </tr>
+                    <!-- Footer -->
+                    <tr>
+                      <td align="center" bgcolor="#f4f4f7" style="padding: 20px; font-size: 12px; color: #888888;">
+                        © {2025} Super Marine Rental. All rights reserved.
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+            </table>
+          </body>
+        </html>
         """
+
 
         email_msg = EmailMultiAlternatives(subject, text_message, settings.EMAIL_HOST_USER, [email])
         email_msg.attach_alternative(html_message, "text/html")
