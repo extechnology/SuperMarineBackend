@@ -7,6 +7,10 @@ from django.utils.http import urlsafe_base64_encode
 from django.utils.encoding import force_bytes
 from django.urls import reverse
 from django.conf import settings
+from django.core.mail import EmailMultiAlternatives
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.encoding import force_bytes, force_str
+
 
 
 class RegisterSerializer(serializers.Serializer):
@@ -250,9 +254,6 @@ class ResendOTPSerializer(serializers.Serializer):
             
         data["otp"] = otp  
 
-        # ✅ Add OTP to validated data if you need it later
-        # data["otp"] = otp
-        # return data
 
         html_message = f"""
         <!DOCTYPE html>
@@ -449,9 +450,6 @@ class ResendOTPSerializer(serializers.Serializer):
         )
         return data 
             
-from django.core.mail import EmailMultiAlternatives
-from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
-from django.utils.encoding import force_bytes, force_str
 
 
 class PasswordResetSerializer(serializers.Serializer):

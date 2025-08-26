@@ -241,17 +241,18 @@ def ensure_hhmmss(t: str) -> str:
     # "14:30" -> "14:30:00"
     return t if len(t) == 8 else f"{t}:00"
 
-def calculate_total(price_per_hour: Decimal, duration_label: str, people: int, discount_pct: Decimal) -> Decimal:
+def calculate_total(base_price_30mins: Decimal, duration_label: str, people: int, discount_pct: Decimal) -> Decimal:
     multipliers = {
-        "30 mins": Decimal("0.6"),
-        "1 hour": Decimal("1"),
-        "2 hours": Decimal("1.8"),
-        "Full day": Decimal("3.5"),
+        "30 mins": Decimal("1"),   # Base
+        "1 hour": Decimal("2"),
+        "2 hours": Decimal("4"),
+        "Full day": Decimal("16"), # 8 hours
     }
-    base = price_per_hour * multipliers.get(duration_label, Decimal("1"))
+    base = base_price_30mins * multipliers.get(duration_label, Decimal("1"))
     subtotal = base * Decimal(people)
     discount = subtotal * (discount_pct / Decimal("100")) if discount_pct else Decimal("0")
     return (subtotal - discount).quantize(Decimal("0.01"))
+
 
 @api_view(["POST"])
 @permission_classes([permissions.AllowAny])  
@@ -260,16 +261,19 @@ def create_checkout_session(request):
     print(request.data,"data------------------------------------")
 
 
-    price_per_hour = Decimal(str(data.get("price_per_hour", "120.00")))
-    duration_label = data.get("duration") or "1 hour"
-    people = int(data.get("number_of_persons", 1))
-    discount_pct = Decimal(str(data.get("discount", "0")))
     email = data.get("email")
     title = data.get("title", "Service")
     date_str = data.get("date")
     time_str = ensure_hhmmss(data.get("time", "10:00"))
+    
+    base_price = Decimal(str(data.get("base_price", "120.00"))) 
+    duration_label = data.get("duration") or "30 mins"
+    people = int(data.get("number_of_persons", 1))
+    discount_pct = Decimal(str(data.get("discount", "0")))
 
-    total = calculate_total(price_per_hour, duration_label, people, discount_pct)
+
+    total = calculate_total(base_price, duration_label, people, discount_pct)
+
     amount_cents = int(total * 100)
 
     description = f"{title} — {duration_label}, {people} person(s) — {date_str} {time_str}"
@@ -298,7 +302,7 @@ def create_checkout_session(request):
               "number_of_persons": str(people),
               "email": email or "",
               "discount": str(discount_pct),
-              "price_per_hour": str(price_per_hour),
+              "price_per_hour": str(base_price),
           },
       )
       return Response({"checkout_url": session.url, "id": session.id}, status=status.HTTP_201_CREATED)
@@ -341,17 +345,16 @@ def stripe_webhook(request):
 
         amount_total = Decimal(session.get("amount_total", 0)) / Decimal("100")
 
-        # Name/phone not known at webhook time? Store blank or capture on Checkout through custom fields.
         Booking.objects.create(
             title=title,
             price=amount_total,
             duration=duration_td,
             time=time,
             date=date,
-            name="",              # or store from metadata if you passed it
+            name=meta.get("name", ""),  
             email=email,
-            phone="",             # optional
-            special_request=None, # optional
+            phone=meta.get("phone", ""),
+            special_request=meta.get("notes", None),
             discount=discount_pct,
             number_of_persons=num_people,
         )

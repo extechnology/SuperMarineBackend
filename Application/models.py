@@ -71,6 +71,12 @@ class VehicleDuration(models.Model):
         return f"{self.vehicle.name} - {self.duration} - {self.price}"
     
     
+STATUS_CHOICES = [
+    ('pending', 'Pending'),
+    ('reviewed', 'Reviewed'),
+]
+
+    
 class Booking(models.Model):
     title = models.CharField(max_length=255)
     price = models.DecimalField(max_digits=10, decimal_places=2)
@@ -84,10 +90,13 @@ class Booking(models.Model):
     discount = models.DecimalField(max_digits=5, decimal_places=2, default=0.00)
     number_of_persons = models.PositiveIntegerField(default=1)
     created_at = models.DateTimeField(auto_now_add=True)
+    status = models.CharField(max_length=20, default='pending' , choices=STATUS_CHOICES)
+    
 
     def __str__(self):
         return f"{self.title} - {self.name} on {self.date}"
     
+
 
 class EnquiryBooking(models.Model):
     OPTIONS = [
@@ -109,6 +118,7 @@ class EnquiryBooking(models.Model):
     phone = models.CharField(max_length=20)
     created_at = models.DateTimeField(auto_now_add=True)
     number_of_persons = models.PositiveIntegerField(default=1)
+    status = models.CharField(max_length=20, default='pending' , choices=STATUS_CHOICES)
 
     def __str__(self):
         return f"{self.title} - {self.name} on {self.date}"
@@ -197,6 +207,8 @@ class ServiceEnquiry(models.Model):
     name = models.CharField(max_length=255)
     message = models.TextField(default="")
     created_at = models.DateTimeField(auto_now_add=True)
+    status = models.CharField(max_length=20, default='pending' , choices=STATUS_CHOICES)
+    
 
     def __str__(self):
         return f"Click on {self.service.title} at {self.created_at}"
