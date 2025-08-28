@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import *
+from Application.models import *
 
 
 from django.contrib.auth.tokens import default_token_generator
@@ -557,11 +557,20 @@ class VehicleCategorySerializer(serializers.ModelSerializer):
         model = VehicleCategory
         fields = '__all__'
         
+        
+        
+class VehicleDurationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = VehicleDuration
+        fields = '__all__'
+        
 class VehicleSerializer(serializers.ModelSerializer):
     category = VehicleCategorySerializer()
+    durations = VehicleDurationSerializer(many=True)
     class Meta:
         model = Vehicle
         fields = '__all__'
+        
         
 class BookingSerializer(serializers.ModelSerializer):
     class Meta:

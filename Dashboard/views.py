@@ -149,18 +149,15 @@ class ExportBookingsExcel(APIView):
 
 
 class ExportServiceRequestsExcel(APIView):
-    permission_classes = [IsAuthenticated]  # optional, depends on your case
+    permission_classes = [IsAuthenticated]  
 
     def get(self, request, *args, **kwargs):
-        # Query all service requests
         service_requests = ServiceEnquiry.objects.all().order_by("-created_at")
 
-        # Create workbook
         wb = openpyxl.Workbook()
         ws = wb.active
         ws.title = "Service Requests"
 
-        # Header row
         headers = ["Name", "Message", "Created At"]
         ws.append(headers)
 
@@ -176,7 +173,6 @@ class ExportServiceRequestsExcel(APIView):
                 req.created_at.strftime("%Y-%m-%d %H:%M"),
             ])
 
-        # Prepare response
         response = HttpResponse(
             content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         )
