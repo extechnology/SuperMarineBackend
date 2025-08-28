@@ -9,6 +9,15 @@ from rest_framework.routers import DefaultRouter
 router = DefaultRouter()
 
 router.register(r'bookings', views.BookingViewSet)
+router.register(r'adventure/gallery', views.AdventureGalleryViewSet)
+router.register(r'numbers', views.NumbersViewSet)
+router.register(r'thrill/meet', views.ThrillMeetViewSet)
+router.register(r'book/adventure', views.BookAdventureViewSet)
+router.register(r'about/content', views.AboutUsContentViewSet)
+router.register(r'gallery/banner', views.GalleryBannerViewSet)
+router.register(r'contact/banner', views.ContactBannerViewSet)
+router.register(r'rental/banner', views.RentalBannerViewSet)
+router.register(r'service/banner', views.ServiceBannerViewSet)
 
 urlpatterns = [
     
@@ -18,8 +27,9 @@ urlpatterns = [
     path('resend-otp/', views.ResendOTPView.as_view(), name='resend-otp'),
     path('api/', include(router.urls)),
     path('google-auth/', views.GoogleAuthView.as_view(), name='google-auth'),
-    path('password-reset-request/', views.PasswordResetRequestView.as_view(), name='password-reset-request'),
-    path('password-reset-confirm/<uuid64>/<token>/', views.PasswordResetConfirmView.as_view(), name='password-reset-confirm'),
+    path("password-reset/", views.PasswordResetView.as_view(), name="password-reset"),
+    path("password-reset-confirm/", views.PasswordResetConfirmView.as_view(), name="password-reset-confirm"),
+
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     
     path('enquiry-booking/', views.EnquiryBookingView.as_view(), name='booking'),

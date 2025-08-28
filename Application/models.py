@@ -58,7 +58,9 @@ class Vehicle(models.Model):
     featured = models.BooleanField(default=False)
     
     def __str__(self):
-        return str(self.name - self.category.name)
+        return f"{self.name} - {self.category.name}"
+
+
 
 class VehicleDuration(models.Model):
     vehicle = models.ForeignKey(Vehicle, on_delete=models.CASCADE, related_name='durations')
@@ -67,6 +69,13 @@ class VehicleDuration(models.Model):
     
     def __str__(self):
         return f"{self.vehicle.name} - {self.duration} - {self.price}"
+    
+    
+STATUS_CHOICES = [
+    ('pending', 'Pending'),
+    ('reviewed', 'Reviewed'),
+]
+
     
 class Booking(models.Model):
     title = models.CharField(max_length=255)
@@ -81,10 +90,13 @@ class Booking(models.Model):
     discount = models.DecimalField(max_digits=5, decimal_places=2, default=0.00)
     number_of_persons = models.PositiveIntegerField(default=1)
     created_at = models.DateTimeField(auto_now_add=True)
+    status = models.CharField(max_length=20, default='pending' , choices=STATUS_CHOICES)
+    
 
     def __str__(self):
         return f"{self.title} - {self.name} on {self.date}"
     
+
 
 class EnquiryBooking(models.Model):
     OPTIONS = [
@@ -106,6 +118,7 @@ class EnquiryBooking(models.Model):
     phone = models.CharField(max_length=20)
     created_at = models.DateTimeField(auto_now_add=True)
     number_of_persons = models.PositiveIntegerField(default=1)
+    status = models.CharField(max_length=20, default='pending' , choices=STATUS_CHOICES)
 
     def __str__(self):
         return f"{self.title} - {self.name} on {self.date}"
@@ -138,6 +151,38 @@ class AdventureGallery(models.Model):
         return str(self.id)
     
     
+class GalleryBanner (models.Model):
+    image = models.ImageField(upload_to='gallery_images/')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"GalleryBanner {self.id}"
+
+    
+class ContactBanner(models.Model):
+    image = models.ImageField(upload_to='contact_images/')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"ContactBanner {self.id}"
+
+    
+class ServiceBanner(models.Model):
+    image = models.ImageField(upload_to='services_images/')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"ServiceBanner {self.id}"
+
+    
+class RentalBanner(models.Model):
+    image = models.ImageField(upload_to='rental_images/')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"RentalBanner {self.id}"
+
+    
 class ProjectGallery(models.Model):
     title = models.CharField(max_length=255)
     image = models.ImageField(upload_to='gallery_images/')
@@ -163,6 +208,8 @@ class ServiceEnquiry(models.Model):
     name = models.CharField(max_length=255)
     message = models.TextField(default="")
     created_at = models.DateTimeField(auto_now_add=True)
+    status = models.CharField(max_length=20, default='pending' , choices=STATUS_CHOICES)
+    
 
     def __str__(self):
         return str(f"Click on {self.service.title} at {self.created_at}")
@@ -202,11 +249,13 @@ class AboutUsContent(models.Model):
     
 class BookAdventure(models.Model):
     subtitle = models.CharField(max_length=255)
-    image = models.ImageField(upload_to='about_us_images/')
+    image = models.ImageField(upload_to='about_us_images/',null=True, blank=True)
+    image2 = models.ImageField(upload_to='about_us_images/', null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return str(self.title)
+        return self.subtitle
+    
     
 class Payment(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)

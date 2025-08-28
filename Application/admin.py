@@ -38,12 +38,27 @@ admin.site.register(AboutUsImages)
 
 @admin.register(Services)
 class ServicesAdmin(admin.ModelAdmin):
-    list_display = ("title", "click_count", "last_clicked")
+    list_display = ('title', 'created_at') 
+    search_fields = ('title', 'description')  
+    list_filter = ('created_at',)
 
-    def click_count(self, obj):
-        return obj.clicks.count()
+    def short_description(self, obj):
+        return obj.description[:50] if obj.description else ""
 
-    def last_clicked(self, obj):
-        last = obj.clicks.order_by("-created_at").first()
-        return last.created_at if last else "-"
+admin.site.register(ThrillMeetsTrust)
 
+admin.site.register(AboutUsContent)
+
+admin.site.register(Numbers)
+
+admin.site.register(AdventureGallery)
+
+admin.site.register(BookAdventure)
+
+admin.site.register(ContactBanner)
+
+admin.site.register(RentalBanner)
+
+admin.site.register(ServiceBanner)
+
+admin.site.register(GalleryBanner)

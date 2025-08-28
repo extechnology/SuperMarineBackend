@@ -104,39 +104,24 @@ class ResendOTPView(APIView):
             return Response(serializer.validated_data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
-class PasswordResetRequestView(generics.GenericAPIView):
+class PasswordResetView(generics.GenericAPIView):
     serializer_class = PasswordResetSerializer
 
     def post(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data, context={'request': request})
+        serializer = self.get_serializer(data=request.data, context={"request": request})
         serializer.is_valid(raise_exception=True)
         serializer.save()
-        return Response({"message": "Password reset link sent to your email."}, status=status.HTTP_200_OK)
-    
+        return Response({"message": "Password reset email sent."}, status=status.HTTP_200_OK)
+
 
 class PasswordResetConfirmView(generics.GenericAPIView):
     serializer_class = PasswordResetConfirmSerializer
 
-    def post(self, request, uidb64, token):
+    def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-
-        try:
-            uid = urlsafe_base64_decode(uidb64).decode()
-            user = User.objects.get(pk=uid)
-
-            if not default_token_generator.check_token(user, token):
-                return Response({'error': 'Invalid or expired token'}, status=status.HTTP_400_BAD_REQUEST)
-
-            user.set_password(serializer.validated_data['password'])
-            user.save()
-
-            return Response({'message': 'Password reset successful'}, status=status.HTTP_200_OK)
-
-        except Exception as e:
-            
-            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
-        
+        serializer.save()
+        return Response({"message": "Password has been reset successfully."}, status=status.HTTP_200_OK)
 
 class EnquiryBookingView(APIView):
     def post(self, request):
@@ -197,12 +182,48 @@ class AboutUsImagesView(APIView):
         serializer = AboutUsImagesSerializer(about_us_images, many=True)
         return Response(serializer.data)
     
+class BookAdventureViewSet(viewsets.ModelViewSet):
+    queryset = BookAdventure.objects.all()
+    serializer_class = BookAdventureSerializer
+    
+class AboutUsContentViewSet(viewsets.ModelViewSet):
+    queryset = AboutUsContent.objects.all()
+    serializer_class = AboutUsContentSerializer
+    
+class ThrillMeetViewSet(viewsets.ModelViewSet):
+    queryset = ThrillMeetsTrust.objects.all()
+    serializer_class = ThrillMeetSerializer
+    
+class NumbersViewSet(viewsets.ModelViewSet):
+    queryset = Numbers.objects.all()
+    serializer_class = NumbersSerializer
+    
+class AdventureGalleryViewSet(viewsets.ModelViewSet):
+    queryset = AdventureGallery.objects.all()
+    serializer_class = AdventureGallerySerializer
     
 class BookingViewSet(viewsets.ModelViewSet):
     queryset = Booking.objects.all().order_by("-created_at")
     serializer_class = BookingSerializer
+    permission_classes = [IsAuthenticated]
     
+class GalleryBannerViewSet(viewsets.ModelViewSet):
+    queryset = GalleryBanner.objects.all()
+    serializer_class = GalleryBannerSerializer
     
+class ContactBannerViewSet(viewsets.ModelViewSet):
+    queryset = ContactBanner.objects.all()
+    serializer_class = ContactBannerSerializer
+    
+class RentalBannerViewSet(viewsets.ModelViewSet):   
+    queryset = RentalBanner.objects.all()
+    serializer_class = RentalBannerSerializer
+    
+class ServiceBannerViewSet(viewsets.ModelViewSet):
+    queryset = ServiceBanner.objects.all()
+    serializer_class = ServiceBannerSerializer 
+    
+
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
 DURATION_MAP = {
@@ -220,17 +241,18 @@ def ensure_hhmmss(t: str) -> str:
     # "14:30" -> "14:30:00"
     return t if len(t) == 8 else f"{t}:00"
 
-def calculate_total(price_per_hour: Decimal, duration_label: str, people: int, discount_pct: Decimal) -> Decimal:
+def calculate_total(base_price_30mins: Decimal, duration_label: str, people: int, discount_pct: Decimal) -> Decimal:
     multipliers = {
-        "30 mins": Decimal("0.6"),
-        "1 hour": Decimal("1"),
-        "2 hours": Decimal("1.8"),
-        "Full day": Decimal("3.5"),
+        "30 mins": Decimal("1"),   # Base
+        "1 hour": Decimal("2"),
+        "2 hours": Decimal("4"),
+        "Full day": Decimal("16"), # 8 hours
     }
-    base = price_per_hour * multipliers.get(duration_label, Decimal("1"))
+    base = base_price_30mins * multipliers.get(duration_label, Decimal("1"))
     subtotal = base * Decimal(people)
     discount = subtotal * (discount_pct / Decimal("100")) if discount_pct else Decimal("0")
     return (subtotal - discount).quantize(Decimal("0.01"))
+
 
 @api_view(["POST"])
 @permission_classes([permissions.AllowAny])  
@@ -239,16 +261,19 @@ def create_checkout_session(request):
     print(request.data,"data------------------------------------")
 
 
-    price_per_hour = Decimal(str(data.get("price_per_hour", "120.00")))
-    duration_label = data.get("duration") or "1 hour"
-    people = int(data.get("number_of_persons", 1))
-    discount_pct = Decimal(str(data.get("discount", "0")))
     email = data.get("email")
     title = data.get("title", "Service")
     date_str = data.get("date")
     time_str = ensure_hhmmss(data.get("time", "10:00"))
+    
+    base_price = Decimal(str(data.get("base_price", "120.00"))) 
+    duration_label = data.get("duration") or "30 mins"
+    people = int(data.get("number_of_persons", 1))
+    discount_pct = Decimal(str(data.get("discount", "0")))
 
-    total = calculate_total(price_per_hour, duration_label, people, discount_pct)
+
+    total = calculate_total(base_price, duration_label, people, discount_pct)
+
     amount_cents = int(total * 100)
 
     description = f"{title} — {duration_label}, {people} person(s) — {date_str} {time_str}"
@@ -277,7 +302,7 @@ def create_checkout_session(request):
               "number_of_persons": str(people),
               "email": email or "",
               "discount": str(discount_pct),
-              "price_per_hour": str(price_per_hour),
+              "price_per_hour": str(base_price),
           },
       )
       return Response({"checkout_url": session.url, "id": session.id}, status=status.HTTP_201_CREATED)
@@ -320,17 +345,16 @@ def stripe_webhook(request):
 
         amount_total = Decimal(session.get("amount_total", 0)) / Decimal("100")
 
-        # Name/phone not known at webhook time? Store blank or capture on Checkout through custom fields.
         Booking.objects.create(
             title=title,
             price=amount_total,
             duration=duration_td,
             time=time,
             date=date,
-            name="",              # or store from metadata if you passed it
+            name=meta.get("name", ""),  
             email=email,
-            phone="",             # optional
-            special_request=None, # optional
+            phone=meta.get("phone", ""),
+            special_request=meta.get("notes", None),
             discount=discount_pct,
             number_of_persons=num_people,
         )
@@ -348,3 +372,4 @@ def get_session(request, session_id: str):
         "currency": session.get("currency"),
         "metadata": session.get("metadata", {}),
     })
+    
