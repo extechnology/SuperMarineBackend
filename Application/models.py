@@ -129,7 +129,7 @@ class ThrillMeetsTrust(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return self.id
+        return str(self.id)
     
 class Numbers(models.Model):
     experience = models.CharField(max_length=255)
@@ -139,7 +139,7 @@ class Numbers(models.Model):
     image = models.ImageField(upload_to='about_us_images/')
 
     def __str__(self):
-        return self.title
+        return str(self.title)
 
     
 class AdventureGallery(models.Model):
@@ -147,6 +147,7 @@ class AdventureGallery(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     
     def __str__(self):
+        
         return str(self.id)
     
     
@@ -189,7 +190,7 @@ class ProjectGallery(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return self.title
+        return str(self.title)
 
 
 class Services(models.Model):
@@ -200,7 +201,7 @@ class Services(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return self.title
+        return str(self.title)
 
 
 class ServiceEnquiry(models.Model):
@@ -211,7 +212,7 @@ class ServiceEnquiry(models.Model):
     
 
     def __str__(self):
-        return f"Click on {self.service.title} at {self.created_at}"
+        return str(f"Click on {self.service.title} at {self.created_at}")
     
     
     
@@ -223,7 +224,7 @@ class HomePageSliderImage(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return self.title
+        return str(self.title)
     
 
 
@@ -233,7 +234,7 @@ class AboutUsImages(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return self.title
+        return str(self.title)
 
 
 class AboutUsContent(models.Model):
@@ -243,7 +244,7 @@ class AboutUsContent(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return self.title
+        return str(self.title)
     
     
 class BookAdventure(models.Model):
@@ -266,4 +267,4 @@ class Payment(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"Payment {self.stripe_payment_intent_id} - {self.amount}"
+        return str(f"Payment {self.stripe_payment_intent_id} - {self.amount}")
