@@ -1,7 +1,5 @@
 from rest_framework import serializers
 from Application.models import *
-
-
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_encode
 from django.utils.encoding import force_bytes
@@ -10,7 +8,7 @@ from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
-
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 
 class RegisterSerializer(serializers.Serializer):
@@ -451,6 +449,24 @@ class ResendOTPSerializer(serializers.Serializer):
         return data 
             
 
+class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    @classmethod
+    def get_token(cls, user):
+        token = super().get_token(user)
+        # You can also add extra claims in token if needed
+        token['username'] = user.username
+        return token
+
+    def validate(self, attrs):
+        data = super().validate(attrs)
+        # Add custom fields in response
+        data.update({
+            "user_id": self.user.id,
+            "email": self.user.email,
+            "username": self.user.username,
+            "unique_id": getattr(self.user, "unique_id", None),  # if exists
+        })
+        return data
 
 class PasswordResetSerializer(serializers.Serializer):
     email = serializers.EmailField()

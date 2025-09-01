@@ -1,8 +1,6 @@
 from django.urls import path,include
 from . import views
-from rest_framework_simplejwt.views import (
-    TokenObtainPairView
-)
+from .views import CustomTokenObtainPairView
 from rest_framework.routers import DefaultRouter
 
 
@@ -30,7 +28,7 @@ urlpatterns = [
     path("password-reset/", views.PasswordResetView.as_view(), name="password-reset"),
     path("password-reset-confirm/", views.PasswordResetConfirmView.as_view(), name="password-reset-confirm"),
 
-    path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('api/token/', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
     
     path('enquiry-booking/', views.EnquiryBookingView.as_view(), name='booking'),
     

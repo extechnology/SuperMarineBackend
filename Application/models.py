@@ -78,6 +78,7 @@ STATUS_CHOICES = [
 
     
 class Booking(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     title = models.CharField(max_length=255)
     price = models.DecimalField(max_digits=10, decimal_places=2)
     duration = models.DurationField()

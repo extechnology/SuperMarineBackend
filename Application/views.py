@@ -30,6 +30,7 @@ from rest_framework import permissions
 from google.oauth2 import id_token
 from google.auth.transport import requests
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.views import TokenObtainPairView
 import os
 
 # authentication
@@ -103,6 +104,11 @@ class ResendOTPView(APIView):
         if serializer.is_valid():
             return Response(serializer.validated_data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class CustomTokenObtainPairView(TokenObtainPairView):
+    serializer_class = CustomTokenObtainPairSerializer
+
     
 class PasswordResetView(generics.GenericAPIView):
     serializer_class = PasswordResetSerializer
@@ -285,7 +291,7 @@ def create_checkout_session(request):
           customer_email=email,  # optional
           line_items=[{
               "price_data": {
-                  "currency": "usd",  # change if needed
+                  "currency": "aed", 
                   "product_data": {"name": title, "description": description},
                   "unit_amount": amount_cents,
               },
