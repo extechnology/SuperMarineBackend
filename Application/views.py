@@ -6,8 +6,6 @@ from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.decorators import api_view
 
-# Models and serializers 
-
 from .models import *
 from .serializers import *
 
@@ -32,8 +30,6 @@ from google.auth.transport import requests
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView
 import os
-
-# authentication
 
 
 class GoogleAuthView(APIView):
@@ -209,9 +205,17 @@ class AdventureGalleryViewSet(viewsets.ModelViewSet):
     serializer_class = AdventureGallerySerializer
     
 class BookingViewSet(viewsets.ModelViewSet):
-    queryset = Booking.objects.all().order_by("-created_at")
     serializer_class = BookingSerializer
     permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        # Only return bookings for the logged-in user
+        return Booking.objects.filter(user=self.request.user).order_by("-created_at")
+
+    def perform_create(self, serializer):
+        # Automatically attach the logged-in user when creating a booking
+        serializer.save(user=self.request.user)
+
     
 class GalleryBannerViewSet(viewsets.ModelViewSet):
     queryset = GalleryBanner.objects.all()
@@ -288,7 +292,7 @@ def create_checkout_session(request):
       session = stripe.checkout.Session.create(
           mode="payment",
           payment_method_types=["card"],
-          customer_email=email,  # optional
+          customer_email=email, 
           line_items=[{
               "price_data": {
                   "currency": "aed", 
@@ -297,19 +301,23 @@ def create_checkout_session(request):
               },
               "quantity": 1,
           }],
-          success_url=f"{settings.FRONTEND_URL}/payment/success?session_id={{CHECKOUT_SESSION_ID}}",
-          cancel_url=f"{settings.FRONTEND_URL}/payment/cancel",
+          success_url=f"{settings.FRONTEND_URL}payment/success?session_id={{CHECKOUT_SESSION_ID}}",
+          cancel_url=f"{settings.FRONTEND_URL}payment/cancel",
           metadata={
-              # store everything you need to create the Booking after payment
-              "title": title,
-              "date": date_str or "",
-              "time": time_str,
-              "duration_label": duration_label,
-              "number_of_persons": str(people),
-              "email": email or "",
-              "discount": str(discount_pct),
-              "price_per_hour": str(base_price),
-          },
+            "title": title,
+            "date": date_str or "",
+            "time": time_str,
+            "duration_label": duration_label,
+            "number_of_persons": str(people),
+            "email": email or "",
+            "discount": str(discount_pct),
+            "price_per_hour": str(base_price),
+            "name": data.get("name", ""),
+            "phone": data.get("phone", ""),
+            "notes": data.get("special_request", ""),
+            "user_id": str(request.user.id) if request.user.is_authenticated else "",
+        }
+
       )
       return Response({"checkout_url": session.url, "id": session.id}, status=status.HTTP_201_CREATED)
     except Exception as e:
@@ -350,8 +358,11 @@ def stripe_webhook(request):
         duration_td = parse_duration_to_td(dur)
 
         amount_total = Decimal(session.get("amount_total", 0)) / Decimal("100")
+        user_id = meta.get("user_id")
+        user = User.objects.filter(id=user_id).first() if user_id else None
 
         Booking.objects.create(
+            user=user,
             title=title,
             price=amount_total,
             duration=duration_td,
@@ -363,6 +374,8 @@ def stripe_webhook(request):
             special_request=meta.get("notes", None),
             discount=discount_pct,
             number_of_persons=num_people,
+            status="confirmed"
+
         )
 
     return HttpResponse(status=200)

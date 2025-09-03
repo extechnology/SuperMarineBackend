@@ -3,32 +3,30 @@ from . import views
 from .views import CustomTokenObtainPairView
 from rest_framework.routers import DefaultRouter
 
-
 router = DefaultRouter()
 
-router.register(r'bookings', views.BookingViewSet)
-router.register(r'adventure/gallery', views.AdventureGalleryViewSet)
-router.register(r'numbers', views.NumbersViewSet)
-router.register(r'thrill/meet', views.ThrillMeetViewSet)
-router.register(r'book/adventure', views.BookAdventureViewSet)
-router.register(r'about/content', views.AboutUsContentViewSet)
-router.register(r'gallery/banner', views.GalleryBannerViewSet)
-router.register(r'contact/banner', views.ContactBannerViewSet)
-router.register(r'rental/banner', views.RentalBannerViewSet)
-router.register(r'service/banner', views.ServiceBannerViewSet)
+router.register(r'bookings', views.BookingViewSet, basename='bookings')
+router.register(r'adventure/gallery', views.AdventureGalleryViewSet, basename='adventure-gallery')
+router.register(r'numbers', views.NumbersViewSet, basename='numbers')
+router.register(r'thrill/meet', views.ThrillMeetViewSet, basename='thrill-meet')
+router.register(r'book/adventure', views.BookAdventureViewSet, basename='book-adventure')
+router.register(r'about/content', views.AboutUsContentViewSet, basename='about-content')
+router.register(r'gallery/banner', views.GalleryBannerViewSet, basename='gallery-banner')
+router.register(r'contact/banner', views.ContactBannerViewSet, basename='contact-banner')
+router.register(r'rental/banner', views.RentalBannerViewSet, basename='rental-banner')
+router.register(r'service/banner', views.ServiceBannerViewSet, basename='service-banner')
 
 urlpatterns = [
     
+    path('api/', include(router.urls)),
     
+    path('google-auth/', views.GoogleAuthView.as_view(), name='google-auth'),
     path('register/', views.RegisterView.as_view(), name='register'),
     path('verify-otp/', views.VerifyOTPView.as_view(), name='verify-otp'),
     path('resend-otp/', views.ResendOTPView.as_view(), name='resend-otp'),
-    path('api/', include(router.urls)),
-    path('google-auth/', views.GoogleAuthView.as_view(), name='google-auth'),
+    path('api/token/', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
     path("password-reset/", views.PasswordResetView.as_view(), name="password-reset"),
     path("password-reset-confirm/", views.PasswordResetConfirmView.as_view(), name="password-reset-confirm"),
-
-    path('api/token/', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
     
     path('enquiry-booking/', views.EnquiryBookingView.as_view(), name='booking'),
     
@@ -47,6 +45,8 @@ urlpatterns = [
     path('about-us-slider/',views.AboutUsImagesView.as_view(), name='about-us-slider'),
     
     path("api/payments/create-checkout-session/", views.create_checkout_session, name="create-checkout-session"),
+    
     path("api/payments/webhook/", views.stripe_webhook, name="stripe-webhook"),
+    
     path("api/payments/session/<str:session_id>/", views.get_session, name="stripe-session"),
 ]
