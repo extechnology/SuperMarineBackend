@@ -121,7 +121,11 @@ USE_I18N = True
 USE_TZ = True
 
 CORS_ALLOW_ALL_ORIGINS = True
+<<<<<<< HEAD
 
+=======
+CORS_ALLOW_CREDENTIALS = True
+>>>>>>> c20a081c968ab56d281d3828023052765424be4e
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
@@ -179,7 +183,8 @@ import stripe
 STRIPE_PUBLISHABLE_KEY = config('STRIPE_PUBLISHABLE_KEY')
 STRIPE_SECRET_KEY = config('STRIPE_SECRET_KEY')
 STRIPE_WEBHOOK_SECRET = config('STRIPE_WEBHOOK_SECRET')
-FRONTEND_URL = config('FRONTEND_URL')
+# FRONTEND_URL = config('FRONTEND_URL')
+FRONTEND_URL = 'https://super-marine-frontend.vercel.app/'
 stripe.api_key = STRIPE_SECRET_KEY
 
 # ADMINS = [
@@ -202,16 +207,16 @@ CORS_ALLOW_ORIGINS = [
     "https://super-marine-frontend.vercel.app/"
 ]
 
-CORS_ALLOW_CREDENTIALS = True
+# CORS_ALLOW_CREDENTIALS = True
 
-CORS_ALLOW_METHODS = [
-    "DELETE",
-    "GET",
-    "OPTIONS",
-    "PATCH",
-    "POST",
-    "PUT",
-]
+# CORS_ALLOW_METHODS = [
+#     "DELETE",
+#     "GET",
+#     "OPTIONS",
+#     "PATCH",
+#     "POST",
+#     "PUT",
+# ]
 
 # Custom User
 
