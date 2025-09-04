@@ -268,25 +268,41 @@ def calculate_total(base_price_30mins: Decimal, duration_label: str, people: int
 @permission_classes([permissions.AllowAny])  
 def create_checkout_session(request):
     data = request.data
-    print(request.data,"data------------------------------------")
-
-
+    user = request.user
     email = data.get("email")
     title = data.get("title", "Service")
     date_str = data.get("date")
     time_str = ensure_hhmmss(data.get("time", "10:00"))
-    
+    time = data.get("time")
+    date = data.get("date")
     base_price = Decimal(str(data.get("base_price", "120.00"))) 
     duration_label = data.get("duration") or "30 mins"
     people = int(data.get("number_of_persons", 1))
     discount_pct = Decimal(str(data.get("discount", "0")))
-
+    num_people = data.get("number_of_persons", 1)
 
     total = calculate_total(base_price, duration_label, people, discount_pct)
 
     amount_cents = int(total * 100)
 
     description = f"{title} — {duration_label}, {people} person(s) — {date_str} {time_str}"
+    dur = DURATION_MAP.get(duration_label, "01:00:00")
+    duration_td = parse_duration_to_td(dur)
+    # Booking.objects.create(
+    #         user=user,
+    #         title=title,
+    #         price=base_price,
+    #         duration=duration_td,
+    #         time=time,
+    #         date=date,
+    #         name=data.get("name", ""),  
+    #         email=email,
+    #         phone=data.get("phone", ""),
+    #         special_request=data.get("notes", None),
+    #         discount=discount_pct,
+    #         number_of_persons=num_people,
+    #         status="confirmed"
+    #     )
 
     try:
       session = stripe.checkout.Session.create(
@@ -316,8 +332,7 @@ def create_checkout_session(request):
             "phone": data.get("phone", ""),
             "notes": data.get("special_request", ""),
             "user_id": str(request.user.id) if request.user.is_authenticated else "",
-        }
-
+        },
       )
       return Response({"checkout_url": session.url, "id": session.id}, status=status.HTTP_201_CREATED)
     except Exception as e:
@@ -342,7 +357,7 @@ def stripe_webhook(request):
     if event["type"] == "checkout.session.completed":
         session = event["data"]["object"]
         meta = session.get("metadata", {})
-
+        print("Metadata:", meta)
         # Build/save the Booking here (payment succeeded)
         title = meta.get("title", "Service")
         date = parse_date(meta.get("date") or "")
@@ -377,6 +392,8 @@ def stripe_webhook(request):
             status="confirmed"
 
         )
+        print("Booking created for", email)
+        
 
     return HttpResponse(status=200)
 
@@ -384,6 +401,27 @@ def stripe_webhook(request):
 @permission_classes([permissions.AllowAny])
 def get_session(request, session_id: str):
     session = stripe.checkout.Session.retrieve(session_id)
+    print("Retrieved session:", session)
+    if session.get("payment_status") == "paid":
+        session_metadata = session.get("metadata", {})
+        print("Session metadata:", session_metadata)
+        user = User.objects.filter(id=session_metadata.get("user_id")).first() if session_metadata.get("user_id") else None
+        book = Booking.objects.create(
+            title=session_metadata.get("title", "Service"),
+            price=(Decimal(session.get("amount_total", 0)) / Decimal("100")),
+            duration=parse_duration_to_td(DURATION_MAP.get(session_metadata.get("duration_label", "1 hour"), "01:00:00")),
+            time=parse_time(ensure_hhmmss(session_metadata.get("time", "10:00"))),
+            date=parse_date(session_metadata.get("date", "")),
+            name=session_metadata.get("name", ""),  
+            email=session_metadata.get("email", ""),
+            phone=session_metadata.get("phone", ""),
+            special_request=session_metadata.get("notes", None),
+            discount=Decimal(session_metadata.get("discount", "0")),
+            number_of_persons=int(session_metadata.get("number_of_persons", "1")),
+            status="confirmed",
+            user=user
+        )
+        book.save()
     return Response({
         "status": session.get("status"),
         "payment_status": session.get("payment_status"),
