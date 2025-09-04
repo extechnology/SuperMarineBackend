@@ -26,7 +26,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-ibnpwxk1da=!ex!in6=3uz!&v=cys=o1768qx304n5tzx9+*b*'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
@@ -120,22 +120,14 @@ USE_I18N = True
 
 USE_TZ = True
 
-# CORS_ALLOW_ORIGINS = [
-#     "http://localhost:5173",
-#     "https://super-marine-frontend.vercel.app/"
-# ]
-
-CORS_ORIGIN_ALLOW_ALL = True
-
-CORS_ALLOW_CREDENTIALS = True
-
+CORS_ALLOW_ALL_ORIGINS = True
 
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
 STATIC_URL = 'static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+# STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
@@ -190,11 +182,11 @@ STRIPE_WEBHOOK_SECRET = config('STRIPE_WEBHOOK_SECRET')
 FRONTEND_URL = config('FRONTEND_URL')
 stripe.api_key = STRIPE_SECRET_KEY
 
-ADMINS = [
+# ADMINS = [
     
-    ("super marine", "supermarine.jetski@gmail.com"),
-    ("Vipin", "vipinrajk026@gmail.com"),
-]
+#     ("super marine", "supermarine.jetski@gmail.com"),
+#     ("Vipin", "vipinrajk026@gmail.com"),
+# ]
 
 # Jazzmin settings
 
@@ -224,5 +216,3 @@ CORS_ALLOW_METHODS = [
 # Custom User
 
 AUTH_USER_MODEL = 'Application.User'
-
-

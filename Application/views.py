@@ -236,13 +236,6 @@ class ServiceBannerViewSet(viewsets.ModelViewSet):
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
-DURATION_MAP = {
-    "30 mins": "00:30:00",
-    "1 hour": "01:00:00",
-    "2 hours": "02:00:00",
-    "Full day": "08:00:00",
-}
-
 def parse_duration_to_td(s: str) -> timedelta:
     hh, mm, ss = [int(x) for x in s.split(":")]
     return timedelta(hours=hh, minutes=mm, seconds=ss)
@@ -251,15 +244,8 @@ def ensure_hhmmss(t: str) -> str:
     # "14:30" -> "14:30:00"
     return t if len(t) == 8 else f"{t}:00"
 
-def calculate_total(base_price_30mins: Decimal, duration_label: str, people: int, discount_pct: Decimal) -> Decimal:
-    multipliers = {
-        "30 mins": Decimal("1"),   # Base
-        "1 hour": Decimal("2"),
-        "2 hours": Decimal("4"),
-        "Full day": Decimal("16"), # 8 hours
-    }
-    base = base_price_30mins * multipliers.get(duration_label, Decimal("1"))
-    subtotal = base * Decimal(people)
+def calculate_total(price_per_person: Decimal, people: int, discount_pct: Decimal) -> Decimal:
+    subtotal = price_per_person * Decimal(people)
     discount = subtotal * (discount_pct / Decimal("100")) if discount_pct else Decimal("0")
     return (subtotal - discount).quantize(Decimal("0.01"))
 
@@ -270,62 +256,75 @@ def create_checkout_session(request):
     data = request.data
     print(request.data,"data------------------------------------")
 
-
     email = data.get("email")
     title = data.get("title", "Service")
     date_str = data.get("date")
     time_str = ensure_hhmmss(data.get("time", "10:00"))
     
-    base_price = Decimal(str(data.get("base_price", "120.00"))) 
-    duration_label = data.get("duration") or "30 mins"
+    # Get price directly from the request (price per person)
+    price_per_person = Decimal(str(data.get("price", "120.00"))) 
+    duration = data.get("duration", "00:30:00")  # Fixed duration from service
     people = int(data.get("number_of_persons", 1))
     discount_pct = Decimal(str(data.get("discount", "0")))
-
-
-    total = calculate_total(base_price, duration_label, people, discount_pct)
-
+    
+    total = calculate_total(price_per_person, people, discount_pct)
     amount_cents = int(total * 100)
 
-    description = f"{title} — {duration_label}, {people} person(s) — {date_str} {time_str}"
+    # Format duration for display
+    def format_duration_display(duration_str):
+        if not duration_str:
+            return "30 mins"
+        try:
+            hours, minutes, seconds = duration_str.split(":")
+            hours, minutes = int(hours), int(minutes)
+            if hours > 0:
+                return f"{hours} hour{'s' if hours > 1 else ''}"
+            elif minutes > 0:
+                return f"{minutes} mins"
+            else:
+                return "30 mins"
+        except:
+            return "30 mins"
+
+    duration_display = format_duration_display(duration)
+    description = f"{title} — {duration_display}, {people} person(s) — {date_str} {time_str}"
 
     try:
-      session = stripe.checkout.Session.create(
-          mode="payment",
-          payment_method_types=["card"],
-          customer_email=email, 
-          line_items=[{
-              "price_data": {
-                  "currency": "aed", 
-                  "product_data": {"name": title, "description": description},
-                  "unit_amount": amount_cents,
-              },
-              "quantity": 1,
-          }],
-          success_url=f"{settings.FRONTEND_URL}payment/success?session_id={{CHECKOUT_SESSION_ID}}",
-          cancel_url=f"{settings.FRONTEND_URL}payment/cancel",
-          metadata={
-            "title": title,
-            "date": date_str or "",
-            "time": time_str,
-            "duration_label": duration_label,
-            "number_of_persons": str(people),
-            "email": email or "",
-            "discount": str(discount_pct),
-            "price_per_hour": str(base_price),
-            "name": data.get("name", ""),
-            "phone": data.get("phone", ""),
-            "notes": data.get("special_request", ""),
-            "user_id": str(request.user.id) if request.user.is_authenticated else "",
-        }
-
-      )
-      return Response({"checkout_url": session.url, "id": session.id}, status=status.HTTP_201_CREATED)
+        session = stripe.checkout.Session.create(
+            mode="payment",
+            payment_method_types=["card"],
+            customer_email=email, 
+            line_items=[{
+                "price_data": {
+                    "currency": "aed", 
+                    "product_data": {"name": title, "description": description},
+                    "unit_amount": amount_cents,
+                },
+                "quantity": 1,
+            }],
+            success_url=f"{settings.FRONTEND_URL}payment/success?session_id={{CHECKOUT_SESSION_ID}}",
+            cancel_url=f"{settings.FRONTEND_URL}payment/cancel",
+            metadata={
+                "title": title,
+                "date": date_str or "",
+                "time": time_str,
+                "duration": duration,  # Store the actual duration string
+                "number_of_persons": str(people),
+                "email": email or "",
+                "discount": str(discount_pct),
+                "price_per_person": str(price_per_person),
+                "name": data.get("name", ""),
+                "phone": data.get("phone", ""),
+                "notes": data.get("special_request", ""),
+                "user_id": str(request.user.id) if request.user.is_authenticated else "",
+            }
+        )
+        return Response({"checkout_url": session.url, "id": session.id}, status=status.HTTP_201_CREATED)
     except Exception as e:
         import traceback
         traceback.print_exc()  # Logs the full stack trace
         print("Stripe error:", e)  # This now works because e is in scope
         return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-
 
 
 @csrf_exempt
@@ -347,16 +346,14 @@ def stripe_webhook(request):
         title = meta.get("title", "Service")
         date = parse_date(meta.get("date") or "")
         time = parse_time(meta.get("time") or "10:00:00")
-        duration_label = meta.get("duration_label", "1 hour")
+        duration = meta.get("duration", "00:30:00")  # Get the fixed duration
         num_people = int(meta.get("number_of_persons", "1"))
         email = meta.get("email", "")
         discount_pct = Decimal(meta.get("discount", "0"))
-        price_per_hour = Decimal(meta.get("price_per_hour", "0"))
+        price_per_person = Decimal(meta.get("price_per_person", "0"))
 
-        # Pick a duration for the model's DurationField
-        dur = DURATION_MAP.get(duration_label, "01:00:00")
-        duration_td = parse_duration_to_td(dur)
-
+        # Convert duration string to timedelta for the model
+        duration_td = parse_duration_to_td(duration)
         amount_total = Decimal(session.get("amount_total", 0)) / Decimal("100")
         user_id = meta.get("user_id")
         user = User.objects.filter(id=user_id).first() if user_id else None
@@ -375,7 +372,6 @@ def stripe_webhook(request):
             discount=discount_pct,
             number_of_persons=num_people,
             status="confirmed"
-
         )
 
     return HttpResponse(status=200)
